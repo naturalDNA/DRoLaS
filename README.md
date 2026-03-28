@@ -53,6 +53,26 @@ conda env create -f environment.yml
 conda activate pytorch
 ```
 
+## 🚀 Code Workflow
+
+### 1. Configuration
+Edit config.py to set your parameters.
+
+### 2. Training (Run in order)
+```shell
+python resnet_vae.py          # Train VAE
+python main_region.py         # Train region diffusion
+python mask_detector_unet.py  # Train mask detector
+python main_refine.py         # Train refinement model
+```
+
+### 3. Evaluation
+
+```shell
+python test.py                        # Compute FID/KID
+python eval.py                        # Compute other metrics
+```
+
 ## 📚 Data
 
 Dataset available upon request from the author.
