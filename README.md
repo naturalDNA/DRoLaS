@@ -5,7 +5,7 @@
 
 
 <div align="center">
-  📃 <a href="https://dl.acm.org/doi/abs/10.1145/3731715.3733316">Paper</a> |
+  📃 <a href="https://dl.acm.org/doi/abs/10.1145/3731715.3733316">Paper</a>
 </div>
 
 ## 📝 Introduction
