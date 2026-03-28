@@ -10,8 +10,7 @@
 </div>
 
 <div align="center">
-  📃 <a href="https://ieeexplore.ieee.org/document/10688260">Paper</a> |
-  📚 <a href="https://github.com/ennauata/buildings2vec">Data</a> |
+  📃 <a href="https://dl.acm.org/doi/abs/10.1145/3731715.3733316">Paper</a> |
   📜 <a href="">License</a>
 </div>
 
@@ -84,11 +83,11 @@ If you find this repository useful, please consider giving star and citing our p
 
 ```plaintext
 
-@inproceedings{ji2024wirepaus,
-  title={WirePAuS: Auxiliary-free Single-shot Wireframe Parsing},
-  author={Ji, Jinkang and Shen, Junao and Wang, Xinyu and Feng, Tian and Wu, Sensen},
-  booktitle={2024 IEEE International Conference on Multimedia and Expo (ICME)},
-  year={2024},
-  url={https://ieeexplore.ieee.org/document/10688260},
+@inproceedings{dong2025drolas,
+  title={DRoLaS: Diffusion-Based Coarse-to-Fine Conditional Synthesis of Hierarchical Road Layouts},
+  author={Dong, Shenao and Li, Weitao and Li, Bo and Li, Long and Shen, Junao and Feng, Tian},
+  booktitle={Proceedings of the 2025 International Conference on Multimedia Retrieval},
+  pages={237--245},
+  year={2025}
 }
 ```
