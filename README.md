@@ -56,7 +56,7 @@ conda activate pytorch
 ## 🚀 Code Workflow
 
 ### 1. Configuration
-Edit config.py to set your parameters.
+Edit `config.py` to set your parameters.
 
 ### 2. Training (Run in order)
 ```shell
@@ -72,6 +72,8 @@ python main_refine.py         # Train refinement model
 python test.py                        # Compute FID/KID
 python eval.py                        # Compute other metrics
 ```
+
+
 
 ## 📚 Data
 
