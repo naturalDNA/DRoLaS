@@ -3,15 +3,9 @@
  </h1>
 </div>
 
-<div align="center">
-
-![Data License](https://img.shields.io/badge/Data%20License-MIT-blue.svg)
-![Python 3.10+](https://img.shields.io/badge/python-3.10.0-blue.svg)
-</div>
 
 <div align="center">
   📃 <a href="https://dl.acm.org/doi/abs/10.1145/3731715.3733316">Paper</a> |
-  📜 <a href="">License</a>
 </div>
 
 ## 📝 Introduction
