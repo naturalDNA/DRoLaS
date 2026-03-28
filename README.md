@@ -51,14 +51,13 @@ Click to expand the table of contents
 ## 🔧 Setup Environment
 
 ```shell
-conda create -n wirepaus python=3.10
-conda activate wirepaus
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate pytorch
 ```
 
 ## 📚 Data
 
-You can download the whole evaluation data through the following command from <a href="https://github.com/ennauata/buildings2vec">this repository</a>:
+Dataset available upon request from the author.
 
 ## 📊 Evaluate Benchmark
 
