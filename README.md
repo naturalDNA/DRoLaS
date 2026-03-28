@@ -1,5 +1,5 @@
 <div align="center">
-<h1> WirePAuS: Auxiliary-free Single-shot Wireframe Parsing
+<h1> DRoLaS: Diffusion-based Coarse-to-Fine Conditional Synthesis of Hierarchical Road Layouts
  </h1>
 </div>
 
