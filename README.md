@@ -17,11 +17,9 @@
 
 ## 📝 Introduction
 
-Wireframe parsing aims to identify vectorized line segments as pairs of endpoints from an image. Conventional methods usually require field-specific knowledge for manual introduction of auxiliary processes or auxiliary learning tasks towards satisfactory performances. Such pipelines are, however, characterized by high complexity, insignificant efficiency, and limited space for further performance improvement. 
-
-To address these issues, we propose WirePAuS, a novel Wireframe Parser with an Auxiliary-free Single-shot pipeline, which requires no auxiliary processes or auxiliary learning tasks. This is based on its capability to generate appropriate prior information from a prior-informed feature extractor, which incorporates frequency-domain and Hough-domain prior information on line segments in the backbone. Meanwhile, we devise a structurally compact pipeline that enables the parser to directly predict the focal midpoints as line objects and exploit their displacements for the corresponding endpoints. Our end-to-end trainable WirePAuS is capable to capture rich structural details during single-shot inference. Extensive experiments suggest that the proposed method reaches significantly improved performances for wireframe parsing and outperforms a series of state-of-the-art methods.
+Road layouts embody a city’s spatial structure, making their design fundamental to urban planning applications. While deep learning-based methods have demonstrated potential in road layout synthesis, they struggle to adapt to diverse input conditions and capture the hierarchical nature of real-world road networks. In this paper, we present DRoLaS, a novel diffusion-based method for conditional hierarchical road layout synthesis. Our method incorporates a local adaptation module and a global perception module to enable effective conditional control. Meanwhile, we address data imbalance regarding road classes through a class-weighted denoising loss, and introduce a connectivity refinement strategy to enhance the quality of generated layouts. Experimental results on a self-constructed dataset demonstrate that our DRoLaS successfully synthesizes high quality road layouts that reflect real-world structures and hierarchical patterns while effectively responding to input conditions.
 <div align="center">
-<img src="./assets/pipeline.jpg" style="width: 100%;height: 100%">
+<img src="./assets/teaser.jpg" style="width: 100%;height: 100%">
 </div>
 
 ## 🎉 What's New
