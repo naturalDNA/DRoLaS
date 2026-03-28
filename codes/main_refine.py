@@ -696,7 +696,245 @@ def dilate_mask(data_path,save_path,test_data):
             print("i = {}, total_time = {}".format(i, end_time-begin_time))
         i += 1
     
-def main():
+# def main():
+#     data_type = "numpy" if is_numpy else "RGB"
+#     loaders = Loaders(batch_size,data_type=data_type)
+#     train_data=loaders.train_loader
+#     test_data=loaders.test_loader
+#     model,autoencoder = init_model()
+#     print("model is prepared")
+
+#     #model_sample(test_data,model,autoencoder,config.sample_path)
+
+#     if config.sample_or_train=='sample':
+#         model_sample_removesmall(test_data,model,autoencoder,config.sample_path,config.data_path)
+
+#     else:
+#         iterator = iter(test_data)
+#         optimizer = torch.optim.Adam(model.eps_model.parameters(), lr=learning_rate)
+#         for epoch in range(0,epochs):
+#             #     # Train the model
+#             print("epoch: %i/%i" % (int(epoch), int(epochs)))
+#             train(model,autoencoder,train_data, optimizer,epoch,iterator,save_path=config.train_path,data_type="numpy")
+
+
+
+
+# if __name__ == '__main__':
+#     autoencoder = init_model_vae()
+
+#     data_type = "numpy" if is_numpy else "RGB"
+#     loaders = Loaders(batch_size,data_type=data_type)
+#     train_data=loaders.train_loader
+#     test_data=loaders.test_loader
+#     # # # autoencoder = init_model()
+
+#     #data_path='/home/sadong/refine_ddpm/paint/spadecross1_regionloss1.0,1.2,1.4,1.4,1.4_2900_refine-spadesam_2000_removesmall80_detectormask/result'
+#     data_path='/home/sadong/refine_ddpm/results/focal_spadecross1_regionloss1.0,1.2,1.4,1.4,1.4_2900/condition'
+#     #data_path='/home/sadong/refine_ddpm/paint/focal_spadesam_prob0.45_minsize10_dilate/sample'   
+#     #mask1_path='/home/sadong/refine_ddpm/paint/focal_spadesam_prob0.45_minsize10_dilate'
+#     # mask2_path='/home/sadong/refine_ddpm/paint/spadesam_refine_2000_removesmall'
+#     save_path='/home/sadong/refine_ddpm/paint/spadecross1_regionloss1.0,1.2,1.4,1.4,1.4_2900_maskvae'
+#     #refine_vae(test_data,autoencoder,data_path,save_path)
+#     main()
+#     # remove_small(data_path,save_path,test_data)
+#     # make_mask(data_path,save_path,test_data)
+#     # make_prob_mask(save_path,save_path,save_path,test_data)
+#     # make_mask_result(data_path,save_path,test_data)
+#     # remove_small_final(data_path,save_path,test_data)
+#     # make_detector_mask(data_path,save_path,test_data)
+#     # dilate_mask(data_path,save_path,test_data)
+
+
+def dilate_detector_mask(save_path, test_data):
+    """对检测器掩码进行膨胀，扩大修复区域"""
+    if not os.path.exists(os.path.join(save_path, "mask_detector_dilate2")):
+        os.makedirs(os.path.join(save_path, "mask_detector_dilate2"))
+    
+    i = 0
+    for (pop, dem, lan), data in test_data:
+        for j in range(4):
+            mask_path = os.path.join(save_path, 'mask_detector', '{}_{}.png'.format(i, j))
+            mask_npy = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            
+            kernel = np.ones((3, 3), np.float32)
+            mask_npy = cv2.dilate(mask_npy, kernel, iterations=2)
+            
+            transf = transforms.ToTensor()
+            mask_tensor = transf(mask_npy)
+            mask_tensor = mask_tensor.to(device)
+            
+            output_path = os.path.join(save_path, 'mask_detector_dilate2', '{}_{}.png'.format(i, j))
+            save_image(mask_tensor, output_path, nrow=1)
+        i += 1
+
+
+def create_masked_image(data_path, save_path, test_data):
+    """
+    根据检测器掩码创建破损图像
+    𝑥¯ = 𝑥˜ ⊙ (1 − 𝑚˜)
+    将需要修复的区域置为背景
+    """
+    if not os.path.exists(os.path.join(save_path, "masked")):
+        os.makedirs(os.path.join(save_path, "masked"))
+    
+    i = 0
+    for (pop, dem, lan), data in test_data:
+        for j in range(4):
+            # 读取原始图像
+            orig_path = os.path.join(data_path, '{}_{}.png'.format(i, j))
+            img1 = cv2.imread(orig_path)
+            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+            img_seg = mask_to_onehot(img1, palette)
+            img_seg = img_seg.astype(np.float32)
+            img_tensor = torch.from_numpy(img_seg).permute(2, 0, 1)
+            img_tensor = img_tensor.unsqueeze(0)
+            img_tensor = img_tensor.to(device)
+            
+            # 读取检测器掩码
+            mask_path = os.path.join(save_path, 'mask_detector_dilate2', '{}_{}.png'.format(i, j))
+            mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            transf = transforms.ToTensor()
+            mask_tensor = transf(mask)
+            mask_tensor = mask_tensor.unsqueeze(0).to(device)
+            
+            # 创建破损图像：将需要修复的区域（掩码为1的区域）置为背景
+            masked_image = img_tensor.clone()
+            for k in range(5):
+                masked_image[:, k, :, :] = masked_image[:, k, :, :] * (1 - mask_tensor)
+            
+            # 保存破损图像
+            masked_img = tensor2png(masked_image, 1)
+            save_image(masked_img, os.path.join(save_path, 'masked', '{}_{}.png'.format(i, j)), nrow=1)
+        i += 1
+
+
+def refine_with_detector_mask(test_data, model, autoencoder, save_path, data_path):
+    """
+    使用检测器掩码进行细化修复
+    读取破损图像，用扩散模型修复
+    """
+    if not os.path.exists(os.path.join(save_path, "result_womask")):
+        os.makedirs(os.path.join(save_path, "result_womask"))
+    
+    i = 0
+    for (pop, dem, lan), data in test_data:
+        condition = torch.cat([pop, dem, lan], dim=1).to(device)
+        
+        for j in range(4):
+            # 读取破损图像
+            masked_path = os.path.join(save_path, 'masked', '{}_{}.png'.format(i, j))
+            img1 = cv2.imread(masked_path)
+            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+            img_seg = mask_to_onehot(img1, palette)
+            img_seg = img_seg.astype(np.float32)
+            img_tensor = torch.from_numpy(img_seg).permute(2, 0, 1)
+            img_tensor = img_tensor.unsqueeze(0)
+            img_tensor = img_tensor.to(device)
+            
+            data_break = img_tensor
+            
+            # 扩散模型修复
+            img = latent_sample(model, autoencoder, data_break, condition, 4, 64)
+            
+            # 保存修复结果
+            if is_numpy:
+                img = tensor2png(img, 1)
+            save_image(img, os.path.join(save_path, 'result_womask', '{}_{}.png'.format(i, j)), nrow=1)
+            
+            print("Refined: i={}, j={}".format(i, j))
+        i += 1
+
+
+def merge_with_mask(data_path, save_path, test_data):
+    """
+    图像融合：𝑥 = 𝑥ˆ ⊙ 𝑚˜ + 𝑥˜ ⊙ (1 − 𝑚˜)
+    用检测器掩码融合修复图像和原始图像
+    """
+    if not os.path.exists(os.path.join(save_path, "final_result")):
+        os.makedirs(os.path.join(save_path, "final_result"))
+    
+    i = 0
+    for (pop, dem, lan), data in test_data:
+        for j in range(4):
+            # 读取原始图像
+            orig_path = os.path.join(data_path, '{}_{}.png'.format(i, j))
+            img1 = cv2.imread(orig_path)
+            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+            img_seg = mask_to_onehot(img1, palette)
+            img_seg = img_seg.astype(np.float32)
+            orig_tensor = torch.from_numpy(img_seg).permute(2, 0, 1)
+            orig_tensor = orig_tensor.unsqueeze(0).to(device)
+            
+            # 读取修复图像
+            refine_path = os.path.join(save_path, 'result_womask', '{}_{}.png'.format(i, j))
+            img1 = cv2.imread(refine_path)
+            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+            img_seg = mask_to_onehot(img1, palette)
+            img_seg = img_seg.astype(np.float32)
+            refine_tensor = torch.from_numpy(img_seg).permute(2, 0, 1)
+            refine_tensor = refine_tensor.unsqueeze(0).to(device)
+            
+            # 读取检测器掩码
+            mask_path = os.path.join(save_path, 'mask_detector_dilate2', '{}_{}.png'.format(i, j))
+            mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+            transf = transforms.ToTensor()
+            mask_tensor = transf(mask)
+            mask_tensor = mask_tensor.unsqueeze(0).to(device)
+            
+            # 图像融合
+            result = torch.zeros_like(orig_tensor)
+            for k in range(5):
+                result[:, k, :, :] = refine_tensor[:, k, :, :] * mask_tensor + \
+                                     orig_tensor[:, k, :, :] * (1 - mask_tensor)
+            
+            # 保存最终结果
+            result_img = tensor2png(result, 1)
+            save_image(result_img, os.path.join(save_path, 'final_result', '{}_{}.png'.format(i, j)), nrow=1)
+        i += 1
+
+
+def post_process(data_path, save_path, test_data, model=None, autoencoder=None):
+    """
+    后处理主函数 - 完整流程
+    根据论文描述：
+    1. 检测器生成掩码 𝑚˜
+    2. 膨胀掩码
+    3. 创建破损图像 𝑥¯ = 𝑥˜ ⊙ (1 − 𝑚˜)
+    4. 扩散模型修复得到 𝑥ˆ
+    5. 图像融合 𝑥 = 𝑥ˆ ⊙ 𝑚˜ + 𝑥˜ ⊙ (1 − 𝑚˜)
+    """
+    print("=" * 50)
+    print("Starting connectivity refinement...")
+    print("=" * 50)
+    
+    # 步骤1: 检测器生成掩码
+    print("\n[Step 1] Detecting disconnections...")
+    make_detector_mask(data_path, save_path, test_data)
+    
+    # 步骤2: 膨胀检测器掩码
+    print("\n[Step 2] Dilating detector mask...")
+    dilate_detector_mask(save_path, test_data)
+    
+    # 步骤3: 创建破损图像
+    print("\n[Step 3] Creating masked image...")
+    create_masked_image(data_path, save_path, test_data)
+    
+    # 步骤4: 扩散模型修复
+    if model is not None and autoencoder is not None:
+        print("\n[Step 4] Refining with diffusion model...")
+        refine_with_detector_mask(test_data, model, autoencoder, save_path, data_path)
+    
+    # 步骤5: 图像融合
+    print("\n[Step 5] Merging with mask...")
+    merge_with_mask(data_path, save_path, test_data)
+    
+    print("\n" + "=" * 50)
+    print("Connectivity refinement completed!")
+    print("=" * 50)
+
+
+if __name__ == '__main__':
     data_type = "numpy" if is_numpy else "RGB"
     loaders = Loaders(batch_size,data_type=data_type)
     train_data=loaders.train_loader
@@ -704,34 +942,12 @@ def main():
     model,autoencoder = init_model()
     print("model is prepared")
 
-    #model_sample(test_data,model,autoencoder,config.sample_path)
+    # 配置路径
+    data_path = config.data_path
+    save_path = config.sample_path
 
     if config.sample_or_train=='sample':
-        print("\n[Step 1] Removing small regions...")
-        remove_small(data_path, save_path, test_data)
-        
-        # 步骤2: VAE细化（可选，需要autoencoder）
-        if autoencoder is not None:
-            print("\n[Step 2] VAE refinement...")
-            refine_vae(test_data, autoencoder, data_path, save_path)
-        
-        # 步骤3: 扩散模型细化（可选，需要model）
-        if model is not None:
-            print("\n[Step 3] Diffusion model refinement...")
-            model_sample_removesmall(test_data, model, autoencoder, save_path, data_path)
-        
-        make_mask(data_path, save_path, test_data)
-        
-        dilate_mask(save_path, save_path, test_data)
-        
-        make_detector_mask(data_path, save_path, test_data)
-        
-        make_prob_mask(save_path, save_path, save_path, test_data)
-        
-        make_mask_result(data_path, save_path, test_data)
-
-        remove_small_final(save_path, save_path, test_data)
-        #model_sample_removesmall(test_data,model,autoencoder,config.sample_path,config.data_path)
+        post_process(data_path, save_path, test_data, model=model, autoencoder=autoencoder)
 
     else:
         iterator = iter(test_data)
@@ -740,31 +956,3 @@ def main():
             #     # Train the model
             print("epoch: %i/%i" % (int(epoch), int(epochs)))
             train(model,autoencoder,train_data, optimizer,epoch,iterator,save_path=config.train_path,data_type="numpy")
-
-
-
-
-if __name__ == '__main__':
-    autoencoder = init_model_vae()
-
-    data_type = "numpy" if is_numpy else "RGB"
-    loaders = Loaders(batch_size,data_type=data_type)
-    train_data=loaders.train_loader
-    test_data=loaders.test_loader
-    # # # autoencoder = init_model()
-
-    #data_path='/home/sadong/refine_ddpm/paint/spadecross1_regionloss1.0,1.2,1.4,1.4,1.4_2900_refine-spadesam_2000_removesmall80_detectormask/result'
-    data_path='/home/sadong/refine_ddpm/results/focal_spadecross1_regionloss1.0,1.2,1.4,1.4,1.4_2900/condition'
-    #data_path='/home/sadong/refine_ddpm/paint/focal_spadesam_prob0.45_minsize10_dilate/sample'   
-    #mask1_path='/home/sadong/refine_ddpm/paint/focal_spadesam_prob0.45_minsize10_dilate'
-    # mask2_path='/home/sadong/refine_ddpm/paint/spadesam_refine_2000_removesmall'
-    save_path='/home/sadong/refine_ddpm/paint/spadecross1_regionloss1.0,1.2,1.4,1.4,1.4_2900_maskvae'
-    #refine_vae(test_data,autoencoder,data_path,save_path)
-    main()
-    # remove_small(data_path,save_path,test_data)
-    # make_mask(data_path,save_path,test_data)
-    # make_prob_mask(save_path,save_path,save_path,test_data)
-    # make_mask_result(data_path,save_path,test_data)
-    # remove_small_final(data_path,save_path,test_data)
-    # make_detector_mask(data_path,save_path,test_data)
-    # dilate_mask(data_path,save_path,test_data)

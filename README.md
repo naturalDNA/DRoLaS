@@ -25,7 +25,7 @@ To address these issues, we propose WirePAuS, a novel Wireframe Parser with an A
 </div>
 
 ## 🎉 What's New
-- **[2024.03.13]** 📣 WirePAuS has been accepted for IEEE Conference on Multimedia Expo 2024!
+- **[2025.04.18]** 📣 DRoLaS has been accepted for ACM International Conference on Multimedia Retrieval 2025!
 
 ## 📄 Table of Contents
 
