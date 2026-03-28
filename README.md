@@ -38,9 +38,7 @@ Click to expand the table of contents
 - [📄 Table of Contents](#-table-of-contents)
 - [🔧 Setup Environment](#-setup-environment)
 - [📚 Data](#-data)
-- [📊 Evaluate Benchmark](#-evaluate-benchmark)
-  - [1. Inference](#1-inference)
-  - [2. Evaluation](#2-evaluation)
+- [🚀 Code Workflow](#-code-workflow)
 - [🔁 Reproduction](#-reproduction)
 - [📖 Citation](#-citation)
 
@@ -78,15 +76,6 @@ python eval.py                        # Compute other metrics
 ## 📚 Data
 
 Dataset available upon request from the author.
-
-## 📊 Evaluate Benchmark
-
-### 1. Inference
-
-
-
-### 2. Evaluation
-
 
 
 ## 📖 Citation
